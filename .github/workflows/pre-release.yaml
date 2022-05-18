@@ -22,16 +22,33 @@ jobs:
       with:
         go-version: 1.16
 
-
     - name: "Build & test"
       run: "make tools release-artifacts"
 
-    - uses: "marvinpinto/action-automatic-releases@latest"
+    # - uses: "marvinpinto/action-automatic-releases@latest"
+    #   with:
+    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
+    #     automatic_release_tag: "latest"
+    #     prerelease: true
+    #     title: "Development Build"
+    #     files: |
+    #       LICENSE
+    #       builds/dist/*
+
+    - uses: docker/setup-qemu-action@v1
+
+    - uses: docker/setup-buildx-action@v1
+
+    - uses: docker/login-action@v1
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
-        prerelease: true
-        title: "Development Build"
-        files: |
-          LICENSE
-          builds/dist/*
+        username: "${{ secrets.DOCKER_HUB_USER }}"
+        password: "${{ secrets.DOCKER_HUB_TOKEN }}"
+
+    - name: "Build and push docker image"
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64,linux/arm/v7,linux/arm64
+        push: true
+        tags: callumgare/gotty:latest
